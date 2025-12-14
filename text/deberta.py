@@ -3,7 +3,7 @@ from transformers import (
     AutoTokenizer,
 )
 
-DEBERTA_V3_MODEL_NAME = "microsoft/deberta-v3-small"
+DEBERTA_V3_MODEL_NAME = "vinai/phobert-base"
 
 
 def DebertaV3(num_classes: int):

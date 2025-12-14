@@ -72,24 +72,25 @@ class IemocapPreprocessor:
             
             return transcription
         
-        def correct_transcription_with_photonx(transcription: str) -> str:
+        # def correct_transcription_with_photonx(transcription: str) -> str:
             
-            # phải cài pip install --upgrade photonx
-            from photonx import PhotonX
+        #     # phải cài pip install --upgrade photonx
+        #     from photonx import PhotonX
             
-            import os
-            os.environ["PROTONX_API_KEY"] = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6Im5ndXllbnZpZXRodW5nc29pY3RodXN0QGdtYWlsLmNvbSIsImlhdCI6MTc2NTY3Nzg0NywiZXhwIjoxNzY4MjY5ODQ3fQ.azkJoKM3TvwAsu_4NmPRifs8f9Vr8IXzMLP_GArNNxg"
+        #     import os
+        #     os.environ["PROTONX_API_KEY"] = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6Im5ndXllbnZpZXRodW5nc29pY3RodXN0QGdtYWlsLmNvbSIsImlhdCI6MTc2NTY3Nzg0NywiZXhwIjoxNzY4MjY5ODQ3fQ.azkJoKM3TvwAsu_4NmPRifs8f9Vr8IXzMLP_GArNNxg"
 
-            # Khởi tạo PhotonX với mô hình Tiếng Việt
-            photonx = PhotonX()
+        #     # Khởi tạo PhotonX với mô hình Tiếng Việt
+        #     photonx = PhotonX()
 
-            # Sử dụng PhotonX để sửa lỗi chính tả và ngữ pháp
-            corrected_text = photonx.text.correct(input=transcription,top_k=1)['data'][0]['candidates'][0]['output']
+        #     # Sử dụng PhotonX để sửa lỗi chính tả và ngữ pháp
+        #     corrected_text = photonx.text.correct(input=transcription,top_k=1)['data'][0]['candidates'][0]['output']
 
-            return corrected_text
+        #     return corrected_text
         
         transcription = transcribe_vietnamese_audio(audio_path)
-        corrected_transcription = correct_transcription_with_photonx(transcription)
+        # corrected_transcription = correct_transcription_with_photonx(transcription)
+        corrected_transcription = transcription
         return corrected_transcription
         
     
@@ -159,7 +160,7 @@ class IemocapPreprocessor:
         # read metadata hap, neu, sad, ang
         metadata_path = os.path.join(self._dataset_path,'happy+neutral+angry+sad' ,"metadata.csv")
         metadata_df = pd.read_csv(metadata_path)
-        metadata_df['audio'] = metadata_df['file_name'].str.replace('.wav', '', regex=False) # remove .wav extension
+        metadata_df['audio'] = metadata_df['filename'].str.replace('.wav', '', regex=False) # remove .wav extension
         
         happy_neutral_angry_sad_path = os.path.join(self._dataset_path,'happy+neutral+angry+sad','converted' )
         metadata_df['audio'] = happy_neutral_angry_sad_path + metadata_df['audio']

@@ -32,7 +32,7 @@ class IemocapPreprocessor:
         device = "cuda" if torch.cuda.is_available() else "cpu"
         model.to(device) # type: ignore
 
-        print(f"Đã tải mô hình {model_name} và sử dụng trên thiết bị: {device}")
+        # print(f"Đã tải mô hình {model_name} và sử dụng trên thiết bị: {device}")
         
         def transcribe_vietnamese_audio(audio_path):
             """

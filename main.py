@@ -2,7 +2,9 @@ import random
 import numpy as np
 import torch
 
-# from audio.extractor import Wav2Vec2Extractor
+
+from text.deberta import DebertaV3Tokenizer, DebertaV3
+from audio.extractor import Wav2Vec2Extractor
 from core.config import CONFIG
 from scripts.preprocess_data import (
     process_audio_data_to_pickle,

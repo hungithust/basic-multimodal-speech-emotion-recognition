@@ -30,7 +30,7 @@ def process_audio_data_to_pickle(in_filename: str, out_filename: str, extractor)
     def _extract_data_from_audio(audio_path: str):
         
         wav_path = os.path.join(
-            f"{audio_path}.wav",
+            f"{audio_path}",
         )
         return extractor.extract(wav_path)
 

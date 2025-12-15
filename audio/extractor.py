@@ -90,8 +90,23 @@ class Wav2Vec2Extractor(AudioExtractor):
     def extract(cls, audio_path: str):
         import torchaudio
 
-        raw_audio, sample_rate = torchaudio.load(audio_path)
+        def load_audio_16k(wav_path):
+            waveform, sr = torchaudio.load(wav_path)
+
+            # mono
+            if waveform.shape[0] > 1:
+                waveform = waveform.mean(dim=0, keepdim=True)
+
+            # resample nếu cần
+            if sr != 16000:
+                waveform = torchaudio.functional.resample(
+                    waveform, sr, 16000
+                )
+
+            return waveform.squeeze().numpy(),16000
+        
+        raw_audio, sample_rate = load_audio_16k(audio_path)
         input_features = cls._processor(
-            raw_audio, return_tensors="pt", sampling_rate=sample_rate
+            raw_audio, return_tensors="pt", sampling_rate=sample_rate, padding=True
         ).input_values
         return input_features.flatten()

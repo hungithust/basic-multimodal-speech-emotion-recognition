@@ -233,10 +233,63 @@ class IemocapPreprocessor:
             "emotion": label
         })
 
-    def batch_transcribe(self, audio_paths: List[str]) -> List[str]:
+    # def batch_transcribe(self, audio_paths: List[str]) -> List[str]:
+    #     import torch
+    #     import torchaudio
+    #     from torch.amp import autocast
+
+    #     results = []
+
+    #     forced_decoder_ids = self.processor.get_decoder_prompt_ids(
+    #         language="vi",
+    #         task="transcribe"
+    #     )
+
+    #     for i in tqdm(range(0, len(audio_paths), self.batch_size), desc="Transcribing"):
+    #         batch_paths = audio_paths[i:i + self.batch_size]
+    #         speeches = []
+
+    #         for path in batch_paths:
+    #             waveform, sr = torchaudio.load(path)
+    #             waveform = waveform.mean(dim=0)  # mono
+    #             if sr != 16000:
+    #                 waveform = torchaudio.functional.resample(
+    #                     waveform, sr, 16000
+    #                 )
+    #             speeches.append(waveform.numpy())
+
+    #         inputs = self.processor(
+    #             speeches,
+    #             sampling_rate=16000,
+    #             return_tensors="pt",
+    #             # padding=True
+    #             padding="max_length",
+    #             max_length=1500,
+    #             truncation=True
+    #         ).input_features.to(self.device)
+
+    #         with torch.no_grad():
+    #             with autocast(device_type="cuda", enabled=self.device == "cuda"):
+    #                 predicted_ids = self.model.generate(
+    #                     inputs,
+    #                     forced_decoder_ids=forced_decoder_ids
+    #                 )
+
+    #         texts = self.processor.batch_decode(
+    #             predicted_ids,
+    #             skip_special_tokens=True
+    #         )
+
+    #         results.extend(texts)
+
+    #     return results
+    
+    def batch_transcribe(self, audio_paths):
         import torch
         import torchaudio
-        from torch.amp import autocast
+        import torch.nn.functional as F
+        from torch.cuda.amp import autocast
+        from tqdm import tqdm
 
         results = []
 
@@ -245,30 +298,44 @@ class IemocapPreprocessor:
             task="transcribe"
         )
 
+        MAX_MEL_LEN = 3000  # 🔥 BẮT BUỘC
+
         for i in tqdm(range(0, len(audio_paths), self.batch_size), desc="Transcribing"):
             batch_paths = audio_paths[i:i + self.batch_size]
-            speeches = []
+            mel_batch = []
 
             for path in batch_paths:
                 waveform, sr = torchaudio.load(path)
-                waveform = waveform.mean(dim=0)  # mono
-                if sr != 16000:
-                    waveform = torchaudio.functional.resample(
-                        waveform, sr, 16000
-                    )
-                speeches.append(waveform.numpy())
+                waveform = waveform.mean(dim=0)
 
-            inputs = self.processor(
-                speeches,
-                sampling_rate=16000,
-                return_tensors="pt",
-                padding=True
-            ).input_features.to(self.device)
+                if sr != 16000:
+                    waveform = torchaudio.functional.resample(waveform, sr, 16000)
+
+                # 🔥 TẠO MEL SPECTROGRAM
+                mel = self.processor.feature_extractor(
+                    waveform.numpy(),
+                    sampling_rate=16000,
+                    return_tensors="pt"
+                ).input_features[0]   # (80, T)
+
+                # 🔥 PAD / TRUNCATE MEL → 3000
+                T = mel.shape[1]
+                if T < MAX_MEL_LEN:
+                    mel = F.pad(mel, (0, MAX_MEL_LEN - T))
+                else:
+                    mel = mel[:, :MAX_MEL_LEN]
+
+                mel_batch.append(mel)
+
+            inputs = torch.stack(mel_batch).to(self.device)  # (B, 80, 3000)
+
+            # 🔒 ASSERT CHỐNG CRASH
+            assert inputs.shape[-1] == 3000, inputs.shape
 
             with torch.no_grad():
                 with autocast(enabled=self.device == "cuda"):
                     predicted_ids = self.model.generate(
-                        inputs,
+                        input_features=inputs,
                         forced_decoder_ids=forced_decoder_ids
                     )
 
@@ -280,7 +347,8 @@ class IemocapPreprocessor:
             results.extend(texts)
 
         return results
-    def generate_dataframe(self, save_path: str = "iemocap.pkl") -> pd.DataFrame:
+
+    def generate_dataframe(self) -> pd.DataFrame:
         # ===== scare & surprise =====
         sca_folder = os.path.join(self.dataset_path, "scare")
         sup_folder = os.path.join(self.dataset_path, "surprise")

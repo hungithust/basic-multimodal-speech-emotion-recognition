@@ -3,7 +3,7 @@ data_source:
 dataset:
   name: "raw"
 dataset_specific:
-  IEMOCAP:
+  raw:
     preprocessed_dir: "Preprocessed"
     emotions: ["angry", "scare", "neutral", "sad", "surprise", "happy"]
 dataloader:

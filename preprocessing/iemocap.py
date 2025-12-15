@@ -198,7 +198,7 @@ class IemocapPreprocessor:
     def __init__(
         self,
         dataset_path: str,
-        batch_size: int = 8
+        batch_size: int = 12
     ):
         self.dataset_path = dataset_path
         self.batch_size = batch_size

@@ -32,20 +32,20 @@ if __name__ == "__main__":
     # 1. Prepare audio paths and raw text
     # process_raw_data_to_pickle("audio_and_text.pkl")
     # 2. Turn the raw audio file names into mfccs
-    process_audio_data_to_pickle(
-        "audio_and_text.pkl", "w2v2_and_text.pkl", Wav2Vec2Extractor()
-    )
+    # process_audio_data_to_pickle(
+    #     "audio_and_text.pkl", "w2v2_and_text.pkl", Wav2Vec2Extractor()
+    # )
     # 3. Turn the raw text file into tokens
     # process_text_data_to_pickle(
     #     "w2v2_and_text.pkl", "w2v2_and_tokens.pkl", DebertaV3Tokenizer()
     # )
     # 4. Get the text trainer
-    # text_trainer = TrainerOps.create_or_load_text_trainer("deberta_model3.pt")
+    text_trainer = TrainerOps.create_or_load_text_trainer()
     # 4.1. Train and save the text model
-    # TrainerOps.train(text_trainer)
-    # TrainerOps.save(text_trainer, "deberta_model3.pt")
+    TrainerOps.train(text_trainer)
+    TrainerOps.save(text_trainer, "deberta_model3.pt")
     # 4.2. Evaluate the text model
-    # TrainerOps.evaluate(text_trainer)
+    TrainerOps.evaluate(text_trainer)
     # 5. Get the audio trainer
     # audio_trainer = TrainerOps.create_or_load_audio_trainer(
     #     "wav2vec2_state_dict2.pt", load_state_dict=True

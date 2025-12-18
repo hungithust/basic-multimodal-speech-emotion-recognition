@@ -37,7 +37,7 @@ if __name__ == "__main__":
     # )
     # 3. Turn the raw text file into tokens
     # process_text_data_to_pickle(
-    #     "w2v2_and_text.pkl", "w2v2_and_tokens.pkl", DebertaV3Tokenizer()
+    #     "w2v2_and_text.pkl", "w2v2_and_tokens.parquet", DebertaV3Tokenizer()
     # )
     # 4. Get the text trainer
     text_trainer = TrainerOps.create_or_load_text_trainer()

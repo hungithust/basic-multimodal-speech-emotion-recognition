@@ -14,8 +14,8 @@ def get_dataloader(
         split = ["train", "test"]
     if shuffle is None:
         shuffle = [True, False]
-    dataframe = pd.read_pickle(
-        os.path.join(CONFIG.dataset_preprocessed_dir_path(), "w2v2_and_tokens.pkl")
+    dataframe = pd.read_parquet(
+        os.path.join(CONFIG.dataset_preprocessed_dir_path(), "w2v2_and_tokens.parquet")
     )
     if isinstance(split, str):
         return IemocapDataLoader(

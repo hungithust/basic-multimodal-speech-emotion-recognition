@@ -66,8 +66,8 @@ def process_text_data_to_pickle(in_filename: str, out_filename: str, tokenizer):
                 add_special_tokens=True,
                 truncation=True,
                 padding="max_length",
-                max_length=max_text_length,
+                max_length=256,
             )
         )
     )
-    dataframe.to_pickle(os.path.join(preprocessed_dir, out_filename))
+    dataframe.to_parquet(os.path.join(preprocessed_dir, out_filename))

@@ -30,7 +30,7 @@ class FusionModel(nn.Module):
 
         self.mlp_head = nn.Sequential(
             # TODO: Remove + 4 because is from the old DeBERTa model
-            nn.Linear(170 * 768 + 768 + num_classes * 2 + 4, hidden_layers[0])
+            nn.Linear(123 * 768 + 768 + num_classes * 2, hidden_layers[0])
         )
         for i in range(0, len(hidden_layers) - 1):
             self.mlp_head.append(nn.Linear(hidden_layers[i], hidden_layers[i + 1]))
@@ -44,11 +44,21 @@ class FusionModel(nn.Module):
         audio_classification = self.audio_model.softmax(
             self.audio_model.cls_head(self.audio_model.lm_head(audio_features))
         )
-        deberta_features = self.text_model.deberta(text).last_hidden_state
-        text_features = self.text_model.pooler(deberta_features)
-        text_classification = self.text_model.dropout(
-            self.text_model.classifier(text_features)
-        )
+
+        # --- XỬ LÝ TEXT (Sửa lại phần này) ---
+        # 1. Lấy toàn bộ trạng thái ẩn (Sequence Output)
+        # Shape: (Batch_size, Sequence_length, Hidden_size)
+        sequence_output = self.text_model.roberta(text).last_hidden_state
+
+        # 2. Lấy feature đại diện cho câu (CLS token - vị trí số 0) để ghép vào Fusion layer
+        # Shape: (Batch_size, Hidden_size)
+        text_features = sequence_output[:, 0, :] 
+
+        # 3. Lấy logits phân loại từ text (đưa toàn bộ sequence vào classifier)
+        # Classifier của RoBERTa tự động lấy token [CLS] bên trong nó để xử lý
+        text_classification = self.text_model.classifier(sequence_output)
+        
+        # Lưu ý: classifier đã có dropout bên trong, không cần self.text_model.dropout() ở ngoài nữa
         x = torch.cat(
             [audio_features, audio_classification, text_features, text_classification],
             dim=1,

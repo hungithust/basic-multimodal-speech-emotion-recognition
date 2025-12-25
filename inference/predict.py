@@ -38,7 +38,7 @@ def predict_emotions_from_folder(inference_folder: str):
         "w2v2_and_text.pkl", "w2v2_and_tokens.parquet", DebertaV3Tokenizer(), inference=True
     )
 
-    text_trainer = TrainerOps.create_or_load_text_trainer("deberta_model3.pt", load_state_dict=True)
+    text_trainer = TrainerOps.create_or_load_text_trainer("deberta_model3.pt")
     audio_trainer = TrainerOps.create_or_load_audio_trainer("wav2vec2_state_dict3.pt", load_state_dict=True) 
     # 4. Load trained model  
     fusion_trainer = TrainerOps.create_or_load_fusion_trainer(  

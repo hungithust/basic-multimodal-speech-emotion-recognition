@@ -43,12 +43,12 @@ if __name__ == "__main__":
     #     "w2v2_and_text.pkl", "w2v2_and_tokens.parquet", DebertaV3Tokenizer()
     # )
     # 4. Get the text trainer
-    text_trainer = TrainerOps.create_or_load_text_trainer()
+    # text_trainer = TrainerOps.create_or_load_text_trainer()
     # 4.1. Train and save the text model
-    TrainerOps.train(text_trainer)
-    TrainerOps.save(text_trainer, "deberta_model3.pt")
+    # TrainerOps.train(text_trainer)
+    # TrainerOps.save(text_trainer, "deberta_model3.pt")
     # 4.2. Evaluate the text model
-    TrainerOps.evaluate(text_trainer)
+    # TrainerOps.evaluate(text_trainer)
     # 5. Get the audio trainer
     # audio_trainer = TrainerOps.create_or_load_audio_trainer(
     #     "wav2vec2_state_dict2.pt", load_state_dict=True
@@ -68,6 +68,6 @@ if __name__ == "__main__":
     # 6.2. Evaluate the fusion model
     # TrainerOps.evaluate(fusion_trainer)
     
-    predict_emotions_from_folder(CONFIG.inference_dataset_path())
+    print(predict_emotions_from_folder(CONFIG.inference_dataset_path()))
 
 

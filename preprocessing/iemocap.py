@@ -402,7 +402,7 @@ class IemocapPreprocessor:
         import glob
 
         audio_paths = glob.glob(
-            os.path.join(self.inference_dataset_path, ".wav")
+            os.path.join(self.dataset_path, "*.wav")
         )
 
         print(f"[INFO] Total inference audio files: {len(audio_paths)}")

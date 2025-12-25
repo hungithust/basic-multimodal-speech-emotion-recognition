@@ -12,6 +12,9 @@ from scripts.preprocess_data import (
     process_text_data_to_pickle,
 )
 from scripts.run_model import TrainerOps
+
+from inference.predict import predict_emotions_from_folder
+
 import logging
 
 logging.basicConfig(level=logging.INFO)
@@ -64,3 +67,7 @@ if __name__ == "__main__":
     # TrainerOps.save(fusion_trainer, "fusion_state_dict.pt", save_state_dict=True)
     # 6.2. Evaluate the fusion model
     # TrainerOps.evaluate(fusion_trainer)
+    
+    predict_emotions_from_folder(CONFIG.inference_dataset_path())
+
+

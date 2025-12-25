@@ -2,9 +2,13 @@ data_source:
   path: "data"
 dataset:
   name: "raw"
+  inference: "inference"
 dataset_specific:
   raw:
     preprocessed_dir: "Preprocessed"
+    emotions: ["angry", "scare", "neutral", "sad", "surprise", "happy"]
+  inference:
+    preprocessed_dir: "Inference_Preprocessed"
     emotions: ["angry", "scare", "neutral", "sad", "surprise", "happy"]
 dataloader:
   batch_size: 16

@@ -22,6 +22,11 @@ class CONFIG:
     @classmethod
     def dataset_path(cls):
         return cls._path_from_data(cls._dict["dataset"]["name"])
+    
+    # inference
+    @classmethod
+    def inference_dataset_path(cls):
+        return cls._path_from_data(cls._dict["dataset"]["inference"])
 
     @classmethod
     def dataloader_dict(cls):
@@ -35,7 +40,16 @@ class CONFIG:
                 "preprocessed_dir"
             ],
         )
-
+        
+    # inference
+    @classmethod
+    def dataset_inference_preprocessed_dir_path(cls):
+        return os.path.join(
+            cls.inference_dataset_path(),
+            cls._dict["dataset_specific"][cls._dict["dataset"]["inference"]][
+                "preprocessed_dir"
+            ],
+        )
     @classmethod
     def dataset_emotions(cls):
         return cls._dict["dataset_specific"][cls._dict["dataset"]["name"]]["emotions"]

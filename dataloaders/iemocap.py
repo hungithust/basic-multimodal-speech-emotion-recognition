@@ -29,6 +29,8 @@ class IemocapDataset(Dataset):
             self._dataframe = self._dataframe.iloc[:rows_80_percent, :]
         elif split == "test":
             self._dataframe = self._dataframe.iloc[rows_80_percent:, :]
+        elif split == "all":
+            self._dataframe = self._dataframe
         else:
             raise ValueError("Invalid dataset split")
 

@@ -396,3 +396,22 @@ class IemocapPreprocessor:
 
 
         return data_df
+
+    # inference
+    def generate_inference_dataframe(self) -> pd.DataFrame:
+        import glob
+
+        audio_paths = glob.glob(
+            os.path.join(self.inference_dataset_path, ".wav")
+        )
+
+        print(f"[INFO] Total inference audio files: {len(audio_paths)}")
+
+        texts = self.batch_transcribe(audio_paths)
+
+        data_df = pd.DataFrame({
+            "audio": audio_paths,
+            "text": texts
+        })
+
+        return data_df

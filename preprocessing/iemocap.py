@@ -396,6 +396,7 @@ class IemocapPreprocessor:
 
 
         return data_df
+<<<<<<< HEAD
 
     # inference
     def generate_inference_dataframe(self) -> pd.DataFrame:
@@ -415,3 +416,5 @@ class IemocapPreprocessor:
         })
 
         return data_df
+=======
+>>>>>>> parent of 1157b11 (inference for batch)

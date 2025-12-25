@@ -9,16 +9,11 @@ from core.config import CONFIG
 from preprocessing.iemocap import IemocapPreprocessor
 
 
-def process_raw_data_to_pickle(out_filename: str, inference: bool = False):
-    if not inference:
-        preprocessor = IemocapPreprocessor(CONFIG.dataset_path())
-        df = preprocessor.generate_dataframe()
+def process_raw_data_to_pickle(out_filename: str):
+    preprocessor = IemocapPreprocessor(CONFIG.dataset_path())
+    df = preprocessor.generate_dataframe()
 
-        preprocessed_path = CONFIG.dataset_preprocessed_dir_path()
-    else: 
-        preprocessor = IemocapPreprocessor(CONFIG.inference_dataset_path())
-        df = preprocessor.generate_inference_dataframe()
-        preprocessed_path = CONFIG.dataset_inference_preprocessed_dir_path()
+    preprocessed_path = CONFIG.dataset_preprocessed_dir_path()
     if not os.path.exists(preprocessed_path):
         os.makedirs(preprocessed_path)
 
@@ -27,13 +22,11 @@ def process_raw_data_to_pickle(out_filename: str, inference: bool = False):
     )
 
 
-def process_audio_data_to_pickle(in_filename: str, out_filename: str, extractor, inference: bool = False):
-    if not inference:
-        preprocessed_dir = CONFIG.dataset_preprocessed_dir_path()
-    else:
-        preprocessed_dir = CONFIG.dataset_inference_preprocessed_dir_path()
-        
+def process_audio_data_to_pickle(in_filename: str, out_filename: str, extractor):
+    dataset_path = CONFIG.dataset_path()
+    preprocessed_dir = CONFIG.dataset_preprocessed_dir_path()
     dataframe = pd.read_pickle(os.path.join(preprocessed_dir, in_filename))
+
     def _extract_data_from_audio(audio_path: str):
         
         wav_path = os.path.join(
@@ -61,11 +54,8 @@ def process_audio_data_to_pickle(in_filename: str, out_filename: str, extractor,
     dataframe.to_pickle(os.path.join(preprocessed_dir, out_filename))
 
 
-def process_text_data_to_pickle(in_filename: str, out_filename: str, tokenizer, inference: bool = False):
-    if not inference:
-        preprocessed_dir = CONFIG.dataset_preprocessed_dir_path()
-    else:
-        preprocessed_dir = CONFIG.dataset_inference_preprocessed_dir_path()
+def process_text_data_to_pickle(in_filename: str, out_filename: str, tokenizer):
+    preprocessed_dir = CONFIG.dataset_preprocessed_dir_path()
     dataframe = pd.read_pickle(os.path.join(preprocessed_dir, in_filename))
 
     max_text_length = dataframe["text"].apply(len).max()

@@ -8,30 +8,15 @@ from typing import List
 
 
 def get_dataloader(
-    split = None, shuffle = None, inference: bool = False
+    split = None, shuffle = None,
 ):
-    if not inference:
-        if split is None:
-            split = ["train", "test"]
-        if shuffle is None:
-            shuffle = [True, False]
-        dataframe = pd.read_parquet(
-            os.path.join(CONFIG.dataset_preprocessed_dir_path(), "w2v2_and_tokens.parquet")
-        )
-    else: 
-        if split is None:
-            split = "all"
-        dataframe = pd.read_parquet(
-            os.path.join(CONFIG.dataset_inference_preprocessed_dir_path(), "w2v2_and_tokens.parquet")
-        )
-        return IemocapDataLoader(
-            CONFIG.inference_dataset_path(),
-            dataframe,
-            CONFIG.dataset_emotions(),
-            split,
-            **CONFIG.dataloader_dict(),
-            shuffle=shuffle,
-        )
+    if split is None:
+        split = ["train", "test"]
+    if shuffle is None:
+        shuffle = [True, False]
+    dataframe = pd.read_parquet(
+        os.path.join(CONFIG.dataset_preprocessed_dir_path(), "w2v2_and_tokens.parquet")
+    )
     if isinstance(split, str):
         return IemocapDataLoader(
             CONFIG.dataset_path(),

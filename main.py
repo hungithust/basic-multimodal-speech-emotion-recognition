@@ -3,6 +3,7 @@ import numpy as np
 import torch
 
 
+from inference.inference import load_inference_models, predict_emotion_from_wav, batch_predict_emotions
 from text.deberta import DebertaV3Tokenizer, DebertaV3
 from audio.extractor import Wav2Vec2Extractor
 from core.config import CONFIG
@@ -64,10 +65,26 @@ if __name__ == "__main__":
     # TrainerOps.save(fusion_trainer, "fusion_state_dict.pt", save_state_dict=True)
     # 6.2. Evaluate the fusion model
     # TrainerOps.evaluate(fusion_trainer)
-<<<<<<< HEAD
     
-    print(predict_emotions_from_folder(CONFIG.inference_dataset_path()))
-
-
-=======
->>>>>>> parent of 1157b11 (inference for batch)
+    
+    
+    # Inference example
+        # Load models  
+    text_model, audio_model, fusion_model, tokenizer = load_inference_models()  
+    
+    # Single file inference  
+    result = predict_emotion_from_wav(  
+        "/content/basic-multimodal-speech-emotion-recognition/data/raw/scare/sohai121H.wav",  
+        text_model, audio_model, fusion_model, tokenizer  
+    )  
+    print(f"Transcription: {result['transcription']}")  
+    print(f"Predicted Emotion: {result['predicted_emotion']}")  
+    print(f"Confidence: {result['confidence_scores']}")  
+    
+    # Batch inference  
+    # wav_files = ["audio1.wav", "audio2.wav", "audio3.wav"]  
+    # batch_results = batch_predict_emotions(  
+    #     wav_files, text_model, audio_model, fusion_model, tokenizer  
+    # )  
+    # for res in batch_results:  
+    #     print(f"{res['audio_path']}: {res['predicted_emotion']}")

@@ -30,7 +30,7 @@ class FusionModel(nn.Module):
 
         self.mlp_head = nn.Sequential(
             # TODO: Remove + 4 because is from the old DeBERTa model
-            nn.Linear(123 * 768 + 768 + num_classes * 2, hidden_layers[0])
+            nn.Linear(768 + 768 + num_classes * 2, hidden_layers[0])
         )
         for i in range(0, len(hidden_layers) - 1):
             self.mlp_head.append(nn.Linear(hidden_layers[i], hidden_layers[i + 1]))
@@ -38,11 +38,21 @@ class FusionModel(nn.Module):
         self.softmax = nn.Softmax(dim=1)
 
     def forward(self, text: torch.Tensor, audio: torch.Tensor):
-        audio_features = self.audio_model.flatten(
-            self.audio_model.wav2vec2(audio).last_hidden_state
-        )
-        audio_classification = self.audio_model.softmax(
-            self.audio_model.cls_head(self.audio_model.lm_head(audio_features))
+        # audio_features = self.audio_model.flatten(
+        #     self.audio_model.wav2vec2(audio).last_hidden_state
+        # )
+        # audio_classification = self.audio_model.softmax(
+        #     self.audio_model.cls_head(self.audio_model.lm_head(audio_features))
+        # )
+
+        
+        # Lấy audio features từ mean pooling (không dùng flatten nữa)  
+        audio_sequence = self.audio_model.wav2vec2(audio).last_hidden_state  
+        audio_features = audio_sequence.mean(dim=1)  # (batch_size, 768)  
+          
+        # Lấy audio classification  
+        audio_classification = self.audio_model.softmax(  
+            self.audio_model.cls_head(self.audio_model.lm_head(audio_features))  
         )
 
         # --- XỬ LÝ TEXT (Sửa lại phần này) ---

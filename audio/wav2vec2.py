@@ -11,12 +11,14 @@ class Wav2Vec2(nn.Module):
         #     model = "iic/emotion2vec_plus_base"
         # )
         self.wav2vec2 = AutoModel.from_pretrained(
-            "facebook/wav2vec2-base-960h",mask_time_prob = 0
+            # "facebook/wav2vec2-base-960h",mask_time_prob = 0
+            "nguyenvulebinh/wav2vec2-base-vi-vlsp2020",mask_time_prob = 0
         )
         # self.flatten = nn.Flatten()
         self.mean = nn.AdaptiveAvgPool1d(1)
         self.lm_head = nn.Linear(768, hidden_size)
-        self.cls_head = nn.Linear(hidden_size, num_classes)
+        self.lm_head_2 = nn.Linear(hidden_size, hidden_size // 2)
+        self.cls_head = nn.Linear(hidden_size // 2, num_classes)
         self.softmax = nn.Softmax(dim=1)
 
     def freeze_feature_extractor(self):
@@ -27,6 +29,7 @@ class Wav2Vec2(nn.Module):
         # x = self.flatten(x)
         x = x.permute(0, 2, 1)  # (batch_size, hidden_size, seq_len)
         x = self.lm_head(x)
+        x = self.lm_head_2(x)
         x = self.cls_head(x)
         x = self.softmax(x)
         return x

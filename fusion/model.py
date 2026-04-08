@@ -204,3 +204,79 @@ class LateFusionModel(nn.Module):
         x = self.cls_head(x)
         x = self.softmax(x)
         return x
+
+
+class EnsembleModel(nn.Module):
+    """
+    Ensemble model kết hợp nhiều fusion models với weighted voting
+    Dựa trên accuracy của từng model khi train
+    """
+    def __init__(
+        self,
+        fusion_models: List[nn.Module],
+        weights: List[float] = None,
+        num_classes: int = None
+    ):
+        super(EnsembleModel, self).__init__()
+
+        self.fusion_models = nn.ModuleList(fusion_models)
+        self.num_models = len(fusion_models)
+
+        # Nếu không cung cấp weights, mặc định bằng nhau
+        if weights is None:
+            weights = [1.0] * self.num_models
+        elif len(weights) != self.num_models:
+            raise ValueError("Số lượng weights phải bằng số lượng models")
+
+        # Normalize weights để tổng = 1
+        total_weight = sum(weights)
+        self.weights = [w / total_weight for w in weights]
+
+        # Lấy num_classes từ model đầu tiên nếu không được cung cấp
+        if num_classes is None:
+            # Giả sử tất cả models có cùng num_classes
+            self.num_classes = fusion_models[0].num_classes
+        else:
+            self.num_classes = num_classes
+
+        # Softmax cho output cuối cùng
+        self.softmax = nn.Softmax(dim=1)
+
+    def forward(self, text: torch.Tensor, audio: torch.Tensor):
+        """
+        Forward pass với weighted ensemble
+        """
+        # Thu thập predictions từ tất cả models
+        all_logits = []
+
+        for model in self.fusion_models:
+            with torch.no_grad():
+                logits = model(text, audio)  # (batch_size, num_classes)
+                all_logits.append(logits)
+
+        # Stack tất cả logits: (num_models, batch_size, num_classes)
+        stacked_logits = torch.stack(all_logits, dim=0)
+
+        # Weighted sum theo chiều num_models
+        # weights shape: (num_models,) -> (num_models, 1, 1)
+        weights_tensor = torch.tensor(self.weights, device=stacked_logits.device).view(-1, 1, 1)
+
+        # Weighted average: (batch_size, num_classes)
+        ensemble_logits = torch.sum(stacked_logits * weights_tensor, dim=0)
+
+        # Apply softmax
+        final_output = self.softmax(ensemble_logits)
+
+        return final_output
+
+    def get_model_weights(self):
+        """Trả về weights của từng model"""
+        return self.weights
+
+    def update_weights(self, new_weights: List[float]):
+        """Cập nhật weights cho ensemble"""
+        if len(new_weights) != self.num_models:
+            raise ValueError("Số lượng weights mới phải bằng số lượng models")
+
+        total_weight = sum(new_weights)
+        self.weights = [w / total_weight for w in new_weights]

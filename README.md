@@ -25,7 +25,9 @@ A research report detailing the development and evaluation of this architecture 
    ```bash
    $ pip install requriements.txt
    ```
-
+5. cap nhat weight: # Cập nhật weights dựa trên validation accuracy
+new_weights = [0.87, 0.85, 0.86]  # Thay bằng accuracy thực tế
+ensemble_model.update_weights(new_weights)
 ## Dataset
 
 The dataset can be downloaded from:

@@ -9,7 +9,7 @@ from preprocessing.iemocap import IemocapPreprocessor
 from audio.extractor import Wav2Vec2Extractor  
 from audio.wav2vec2 import Wav2Vec2  
 from text.deberta import DebertaV3, DebertaV3Tokenizer  
-from fusion.model import FusionModel  
+from fusion.model import FusionModel, EarlyFusionModel, LateFusionModel, EnsembleModel  
 from core.config import CONFIG  
   
 def load_inference_models():  
@@ -53,8 +53,55 @@ def load_inference_models():
     fusion_model.eval()  
       
     return text_model, audio_model, fusion_model, text_tokenizer  
+
+
+def create_ensemble_model(text_model, audio_model, device):
+    """
+    Tạo ensemble model kết hợp nhiều fusion strategies
+    Sử dụng weights dựa trên accuracy (tạm thời fix cứng)
+    """
+    num_classes = len(CONFIG.dataset_emotions())
+
+    # Tạo các fusion models khác nhau
+    fusion_model = FusionModel(num_classes, text_model, audio_model)
+    early_fusion_model = EarlyFusionModel(num_classes, text_model, audio_model)
+    late_fusion_model = LateFusionModel(num_classes, text_model, audio_model)
+
+    # Load weights cho các models (giả sử có file)
+    try:
+        fusion_model.load_state_dict(torch.load("saved_models/fusion_state_dict.pt"))
+        early_fusion_model.load_state_dict(torch.load("saved_models/early_fusion_state_dict.pt"))
+        late_fusion_model.load_state_dict(torch.load("saved_models/late_fusion_state_dict.pt"))
+    except FileNotFoundError:
+        print("Warning: Some model weights not found, using untrained models")
+
+    # Chuyển models lên device
+    fusion_model.to(device)
+    early_fusion_model.to(device)
+    late_fusion_model.to(device)
+
+    # Set evaluation mode
+    fusion_model.eval()
+    early_fusion_model.eval()
+    late_fusion_model.eval()
+
+    # Weights dựa trên accuracy (tạm thời fix cứng, có thể thay đổi sau)
+    # Giả sử: FusionModel: 0.85, EarlyFusion: 0.82, LateFusion: 0.83
+    ensemble_weights = [0.85, 0.82, 0.83]
+
+    # Tạo ensemble model
+    ensemble_model = EnsembleModel(
+        fusion_models=[fusion_model, early_fusion_model, late_fusion_model],
+        weights=ensemble_weights,
+        num_classes=num_classes
+    )
+
+    ensemble_model.to(device)
+    ensemble_model.eval()
+
+    return ensemble_model  
   
-def predict_emotion_from_wav(wav_path: str, text_model, audio_model, fusion_model, tokenizer):  
+def predict_emotion_from_wav(wav_path: str, text_model, audio_model, fusion_model, tokenizer, use_ensemble: bool = False, ensemble_model=None):  
     """Predict emotion từ một file WAV"""  
       
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")   
@@ -89,7 +136,14 @@ def predict_emotion_from_wav(wav_path: str, text_model, audio_model, fusion_mode
         audio_logits = audio_model(audio_input)  
           
         # Get fusion prediction  
-        fusion_logits = fusion_model(text_input, audio_input)  
+        if use_ensemble and ensemble_model is not None:
+            # Sử dụng ensemble model
+            fusion_logits = ensemble_model(text_input, audio_input)
+            model_type = "ensemble"
+        else:
+            # Sử dụng single fusion model
+            fusion_logits = fusion_model(text_input, audio_input)
+            model_type = "single_fusion"
           
         # Get predicted emotion  
         predicted_class = torch.argmax(fusion_logits, dim=1).item()  
@@ -104,18 +158,49 @@ def predict_emotion_from_wav(wav_path: str, text_model, audio_model, fusion_mode
         "predicted_emotion": predicted_emotion,  
         "confidence_scores": dict(zip(emotions, confidence_scores)),  
         "text_logits": text_logits.squeeze().tolist(),  
-        "audio_logits": audio_logits.squeeze().tolist()  
+        "audio_logits": audio_logits.squeeze().tolist(),
+        "model_type": model_type
     }  
   
-def batch_predict_emotions(wav_paths: list, text_model, audio_model, fusion_model, tokenizer):  
+def batch_predict_emotions(wav_paths: list, text_model, audio_model, fusion_model, tokenizer, use_ensemble: bool = False, ensemble_model=None):  
     """Predict emotion cho batch file WAV"""  
     results = []  
       
     for wav_path in wav_paths:  
         result = predict_emotion_from_wav(  
-            wav_path, text_model, audio_model, fusion_model, tokenizer  
+            wav_path, text_model, audio_model, fusion_model, tokenizer, use_ensemble, ensemble_model  
         )  
         result["audio_path"] = wav_path  
         results.append(result)  
       
     return results
+
+
+def demo_ensemble_inference():
+    """
+    Demo function để show cách sử dụng ensemble model
+    """
+    print("=== Demo Ensemble Inference ===")
+
+    # Load models
+    text_model, audio_model, fusion_model, tokenizer = load_inference_models()
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+    # Tạo ensemble model
+    ensemble_model = create_ensemble_model(text_model, audio_model, device)
+
+    # Hiển thị thông tin ensemble
+    print(f"Ensemble weights: {ensemble_model.get_model_weights()}")
+    print(f"Number of models in ensemble: {ensemble_model.num_models}")
+
+    # Giả sử có file WAV để test
+    # test_wav = "path/to/test.wav"
+
+    # So sánh single model vs ensemble
+    # single_result = predict_emotion_from_wav(test_wav, text_model, audio_model, fusion_model, tokenizer, use_ensemble=False)
+    # ensemble_result = predict_emotion_from_wav(test_wav, text_model, audio_model, fusion_model, tokenizer, use_ensemble=True, ensemble_model=ensemble_model)
+
+    # print(f"Single model prediction: {single_result['predicted_emotion']}")
+    # print(f"Ensemble prediction: {ensemble_result['predicted_emotion']}")
+
+    print("Ensemble model ready for inference!")
